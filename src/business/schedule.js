@@ -1,8 +1,20 @@
 var db = require('../models/index'),
+  utils = require('./utils'),
   broker = require('../broker_connect');
 
 exports.startLoop = () => {
-  var interval = setInterval(_dostuff, 5000);
+  _startInterval(5000)
+}
+
+_startInterval = (_interval) => {
+  setTimeout(_dostuff, _interval);
+}
+
+_adjustInterval = (count) => {
+  // let timeout = 1800000 - count;
+  // console.log(timeout);
+  // _startInterval(timeout / 360);
+  _startInterval(1800000 - count);
 }
 
 _dostuff = () => {
@@ -10,17 +22,18 @@ _dostuff = () => {
     where: { frequency: { $ne: null } },
     include: [
       { model: db.Patient, include: [{ model: db.Vitabox }] },
-      { model: db.Board }
+      { model: db.Board, include: [{ model: db.Boardmodel }] }
     ]
   }).then(
     x => {
       x.map(y => {
-        console.log("last commit: ", y.last_commit)
+        // console.log("last commit: ", utils.decrypt(y.Patient.name) + " deve realizar o exame de " + y.Board.Boardmodel.name);
         if ((y.frequency * 3600000) > (new Date() - new Date(y.Board.last_commit)) || !y.last_commit) {
-          broker.getChannel().publish(y.Patient.Vitabox.id, '', new Buffer(JSON.stringify({ content: "notification", msg: "exam late" })));
+          broker.getChannel().publish(y.Patient.Vitabox.id, '', new Buffer(JSON.stringify({ content: "notification", msg: utils.decrypt(y.Patient.name) + " deve realizar o exame de " + y.Board.Boardmodel.name })));
         }
-        else console.log("feito");
-      })
+        // else console.log("feito");
+      });
+      _adjustInterval(x.length);
 
     }, error => console.log(error));
 }

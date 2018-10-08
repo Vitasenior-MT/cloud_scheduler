@@ -1,31 +1,21 @@
-// server.js
+// main.js
 
 // BASE SETUP
 // =============================================================================
+// Get the env variables from .env
+require('dotenv').config();
 
-var cluster = require('cluster');
+Promise.all([require('./src/models/index').sequelize.sync(), require("./src/broker_connect").connect()]).then(
+  () => {
+    // console.log('\x1b[32m%s\x1b[0m.', '(PLAIN) Connection established with MySQL and RabbitMQ');
 
-if (cluster.isMaster) {
-  require('./src/models/index').sequelize.sync().then(
-    () => {
-      console.log('\x1b[32m%s\x1b[0m.', '(PLAIN) Connection established with MySQL');
+    let express = require('express');
+    var server = require('http').Server(express());
 
-      for (var i = 0; i < require('os').cpus().length; i++) cluster.fork();
+    require('./src/business/schedule').startLoop();
 
-      cluster.on('exit', (worker, code, signal) => { console.log('(PLAIN) Worker ' + worker.process.pid + ' died -> Starting a new worker'); cluster.fork(); });
-    }, error => { console.log('Unable to connect to Databases.', error); process.exit(1); });
-} else {
-  // connect RabbitMQ
-  require("./src/broker_connect").connect().then(
-    () => {
-      let express = require('express');
-      var server = require('http').Server(express());
-
-      require('./src/business/schedule').startLoop();
-
-      let port = process.env.PORT || 8800;
-      server.listen(port, () => {
-        console.log(`Server running on port ${port}`);
-      });
-    }, error => { console.log('Unable to connect RabbitMQ.', error); process.exit(1); });
-}
+    let port = process.env.PORT || 8800;
+    server.listen(port, () => {
+      console.log('\x1b[32m%s %d\x1b[0m.', '(PLAIN) Server listening on port', port);
+    });
+  }, error => { console.log('Unable to connect RabbitMQ or MySQL server.', error); process.exit(1); });

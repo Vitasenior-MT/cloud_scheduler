@@ -3,7 +3,7 @@ var Sequelize = require('sequelize');
 var mongo_uri = "", mysql_uri = "";
 
 if (process.env.NODE_ENV === "production") {
-    mysql_uri = '';
+    mysql_uri = 'mysql://admin:EPSGVJCYZKHPKWGE@sl-eu-lon-2-portal.13.dblayer.com:29531/compose';
 } else {
     mysql_uri = 'mysql://api:123qwe@192.168.161.53:3306/test';
 }
