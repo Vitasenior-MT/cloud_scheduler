@@ -62,17 +62,8 @@ Vagrant.configure("2") do |config|
     sudo apt-get install -y nodejs
     sudo apt-get install -y build-essential
 
-    sudo apt-get install rabbitmq-server -y
-    sudo rabbitmqctl add_user root 123qwe
-    sudo rabbitmqctl set_user_tags root administrator
-
     # if: protocol error, symlink '../semver/bin/semver' -> '/vagrant/node_modules/.bin/semver'
     # sudo npm install --save --no-bin-links
 
-
-  SHELL
-  config.vm.provision "shell", run: 'always', inline: <<-SHELL
-    sudo service rabbitmq-server start
-    sudo service rabbitmq-server status
   SHELL
 end
