@@ -7,15 +7,12 @@ exports.connect = () => {
   return new Promise((resolve, reject) => {
     amqp.connect(process.env.AMQP, { servername: url.parse(process.env.AMQP).hostname }, (err, conn) => {
       if (err) { reject(err); }
-      conn.createChannel((err, ch) => {
+      else conn.createChannel((err, ch) => {
         if (err) { conn.close(); reject(err); }
 
         connection = conn;
         channel = ch;
-
-        _connectToExchanges().then(
-          () => resolve(),
-          err => reject(err));
+        resolve();
       });
 
     });
@@ -29,26 +26,11 @@ exports.disconnect = () => {
   connection.close();
 }
 
-_connectToExchanges = () => {
+exports.subscribeToEntity = (entity_id) => {
   return new Promise((resolve, reject) => {
-    require("./business/get_vitaboxes").list().then(
-      vitaboxes => {
-        vitaboxes.push("admin");
-        Promise.all(vitaboxes.map(vitabox => _subscribeToVitabox(vitabox))).then(
-          () => resolve(),
-          error => reject(error));
-      }, error => reject(error));
-  });
-}
-
-_subscribeToVitabox = (vitabox) => {
-  return new Promise((resolve, reject) => {
-    channel.assertExchange(vitabox, 'fanout', { durable: true });
-    //setup a queue for receiving messages
-    channel.assertQueue('', { exclusive: true }, function (err, q) {
+    channel.assertExchange(entity_id, 'direct', { autoDelete: true, durable: false }, function (err, ok) {
       if (err) reject(err);
-      channel.bindQueue(q.queue, vitabox, '');
-      resolve();
+      else resolve();
     });
   });
 }

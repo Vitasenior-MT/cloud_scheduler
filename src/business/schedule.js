@@ -10,11 +10,10 @@ _startInterval = (_interval) => {
   setTimeout(_dostuff, _interval);
 }
 
-_adjustInterval = (count) => {
+_adjustInterval = (count, notifications) => {
   // let timeout = 1800000 - count;
-  // console.log(timeout);
-  // _startInterval(timeout / 360);
-  console.log("exams scheduled: ", count);
+  // _startInterval(timeout / 180);
+  console.log("exams scheduled: ", count, "notifications: ", notifications);
   _startInterval(1800000 - count);
 }
 
@@ -27,12 +26,15 @@ _dostuff = () => {
     ]
   }).then(
     x => {
+      let notifications = 0;
       x.map(y => {
         if ((y.frequency * 3600000) > (new Date() - new Date(y.Board.last_commit)) || !y.last_commit) {
-          broker.getChannel().publish(y.Patient.Vitabox.id, '', new Buffer(JSON.stringify({ content: "notification", msg: utils.decrypt(y.Patient.name) + " deve realizar o exame de " + y.Board.Boardmodel.name })));
+          notifications += 1;
+          broker.subscribeToEntity(y.Patient.Vitabox.id).then(
+            () => broker.getChannel().publish(y.Patient.Vitabox.id, 'unicast', new Buffer(JSON.stringify({ content: "notification", msg: utils.decrypt(y.Patient.name) + " deve realizar o exame de " + y.Board.Boardmodel.name }))),
+            error => console.log(error));
         }
       });
-      _adjustInterval(x.length);
-
+      _adjustInterval(x.length, notifications);
     }, error => console.log(error));
 }
