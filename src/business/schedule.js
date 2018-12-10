@@ -28,10 +28,10 @@ _dostuff = () => {
     x => {
       let notifications = 0;
       x.map(y => {
-        if ((y.frequency * 3600000) > (new Date() - new Date(y.Board.last_commit)) || !y.last_commit) {
+        if (!y.last_commit || (y.frequency * 3600000) < (new Date() - new Date(y.Board.last_commit))) {
           notifications += 1;
           broker.subscribeToEntity(y.Patient.Vitabox.id).then(
-            () => broker.getChannel().publish(y.Patient.Vitabox.id, 'unicast', new Buffer(JSON.stringify({ content: "notification", msg: utils.decrypt(y.Patient.name) + " deve realizar o exame de " + y.Board.Boardmodel.name }))),
+            () => broker.getChannel().publish(y.Patient.Vitabox.id, 'unicast', new Buffer(JSON.stringify({ content: "schedule", msg: { tag: y.Board.Boardmodel.tag, message: utils.decrypt(y.Patient.name) + " deve realizar o exame de " + y.Board.Boardmodel.name } }))),
             error => console.log(error));
         }
       });
