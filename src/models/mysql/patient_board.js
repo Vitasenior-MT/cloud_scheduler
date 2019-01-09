@@ -12,10 +12,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, { underscored: true });
 
-  PatientBoard.associate = function (models) {
-    models.PatientBoard.belongsTo(models.Board);
-    models.PatientBoard.belongsTo(models.Patient);
-};
-
   return PatientBoard;
 };

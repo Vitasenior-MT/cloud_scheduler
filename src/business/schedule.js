@@ -13,7 +13,7 @@ _startInterval = (_interval) => {
 _adjustInterval = (count, notifications) => {
   // let timeout = 1800000 - count;
   // _startInterval(timeout / 180);
-  console.log("exams scheduled: ", count, "notifications: ", notifications);
+  console.log("\x1b[36mexams scheduled: %d, notifications: %s\x1b[0m", count, notifications);
   _startInterval(1800000 - count);
 }
 
