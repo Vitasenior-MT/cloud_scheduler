@@ -3,7 +3,7 @@ var amqp = require('amqplib/callback_api'),
 
 var channel, connection;
 
-exports.connect = () => {
+exports.connectToBroker = () => {
   return new Promise((resolve, reject) => {
     amqp.connect(process.env.AMQP, { servername: url.parse(process.env.AMQP).hostname }, (err, conn) => {
       if (err) { reject(err); }

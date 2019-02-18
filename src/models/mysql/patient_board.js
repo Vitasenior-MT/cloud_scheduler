@@ -9,8 +9,18 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null
+    },
+    last_schedule: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null
     }
   }, { underscored: true });
+
+  PatientBoard.associate = function (models) {
+    models.PatientBoard.belongsTo(models.Board);
+    models.PatientBoard.belongsTo(models.Patient);
+  };
 
   return PatientBoard;
 };

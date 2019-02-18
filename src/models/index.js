@@ -1,4 +1,5 @@
-var Sequelize = require('sequelize');
+var mongoose = require('mongoose'),
+    Sequelize = require('sequelize');
 
 const operatorsAliases = {
     $eq: Sequelize.Op.eq,
@@ -37,6 +38,11 @@ const operatorsAliases = {
     $col: Sequelize.Op.col
 };
 
+// Create a new conntection to MongoDB server
+mongoose.connect(process.env.MONGODB, {
+    useCreateIndex: true,
+    useNewUrlParser: true
+});
 // Create a new connection to MySQL server
 var sequelize = new Sequelize(process.env.MYSQL, { operatorsAliases: operatorsAliases, logging: false });
 
@@ -51,7 +57,18 @@ const db = {
     'Sensor': require('./mysql/sensor')(sequelize, Sequelize),
     'UserVitabox': require('./mysql/user_vitabox')(sequelize, Sequelize),
     'User': require('./mysql/user')(sequelize, Sequelize),
-    'Vitabox': require('./mysql/vitabox')(sequelize, Sequelize)
+    'Vitabox': require('./mysql/vitabox')(sequelize, Sequelize),
+
+    'Error': require('./mongodb/error'),
+    'Log': require('./mongodb/log'),
+    'Profilemeasure': require('./mongodb/profile_measure'),
+    'Profilemodel': require('./mongodb/profile_model'),
+    'Record': require('./mongodb/record'),
+    'TempUser': require('./mongodb/temp_user'),
+    'Warning': require('./mongodb/warning'),
+    'WarningUser': require('./mongodb/warning_user'),
+    'WarningDoctor': require('./mongodb/warning_doctor'),
+    'Notification': require('./mongodb/notification'),
 }
 
 Object.keys(db).forEach(modelName => {
@@ -59,5 +76,6 @@ Object.keys(db).forEach(modelName => {
 });
 
 db.sequelize = sequelize;
+db.mongoose = mongoose.connection;
 
 module.exports = db;

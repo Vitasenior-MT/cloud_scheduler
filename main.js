@@ -7,7 +7,8 @@ require('dotenv').config();
 
 Promise.all([
   require('./src/models/index').sequelize.sync(),
-  require("./src/broker_connect").connect()
+  require("./src/broker_connect").connectToBroker(),
+  require("./src/storage_connect").connectToStorage()
 ]).then(
   () => {
     console.log('\x1b[32m(PLAIN) Connection established with External Services\x1b[0m.');
@@ -15,7 +16,11 @@ Promise.all([
     let express = require('express');
     var server = require('http').Server(express());
 
-    require('./src/business/schedule').startLoop();
+    var business = require('./src/business/index');
+
+    business.exams.execute();
+    business.cleaning.execute();
+    business.datarecover.execute();
 
     let port = process.env.PORT || 8800;
     server.listen(port, () => {
