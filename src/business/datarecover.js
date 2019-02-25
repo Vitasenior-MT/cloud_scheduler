@@ -60,7 +60,7 @@ _collectByPatients = (records) => {
             });
           });
         });
-        if (process.env.STORE_BUCKET) {
+        if (process.env.STORE_ANALYTIC_BUCKET) {
           let today = new Date();
           let fileName = today.getFullYear() + (months[today.getMonth()]) + ("0" + today.getDate()).slice(-2) + '_bio.csv';
           let created = false;
@@ -68,7 +68,7 @@ _collectByPatients = (records) => {
             created = true;
             return utils.readFile(fileName)
           }).then(fileData => {
-            return storage.uploadFile(process.env.STORE_BUCKET, fileName, fileData)
+            return storage.uploadFile(process.env.STORE_ANALYTIC_BUCKET, fileName, fileData)
           }).then(() => {
             return utils.removeFile(fileName)
           }).then(() => {
@@ -112,7 +112,7 @@ _collectByBoards = (records) => {
           });
         });
 
-        if (process.env.STORE_BUCKET) {
+        if (process.env.STORE_ANALYTIC_BUCKET) {
           let today = new Date();
           let fileName = today.getFullYear() + (months[today.getMonth()]) + ("0" + today.getDate()).slice(-2) + '_env.csv';
           let created = false;

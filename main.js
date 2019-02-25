@@ -18,7 +18,8 @@ Promise.all([
 
     var business = require('./src/business/index');
 
-    business.exams.execute();
+    // adjust to start at the beginning of the hour  (63 - new Date().getMinutes()) * 1000 * 60
+    setTimeout(business.exams.execute, (63 - new Date().getMinutes()) * 1000 * 60);
     business.cleaning.execute();
     business.datarecover.execute();
 
