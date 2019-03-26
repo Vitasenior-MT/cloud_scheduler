@@ -42,13 +42,16 @@ module.exports = (sequelize, DataTypes) => {
     active: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
+    },
+    get_warnings: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     }
   }, { underscored: true });
 
   Board.associate = function (models) {
     models.Board.belongsTo(models.Vitabox);
     models.Board.belongsTo(models.Boardmodel);
-    models.Board.hasMany(models.PatientBoard);
     models.Board.belongsToMany(models.Patient, { through: models.PatientBoard });
     models.Board.hasMany(models.Sensor);
   };

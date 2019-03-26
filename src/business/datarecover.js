@@ -6,15 +6,16 @@ var db = require('../models/index'),
 exports.execute = function itself() {
   let limit_day = new Date();
   limit_day.setDate(limit_day.getDate() - 1); // last day
-  db.Record.find().where({ datetime: { $gte: new Date(limit_day) } }).exec((error, records) => {
+  let today = new Date();                     // until now
+  db.Record.find().where({ datetime: { $gte: new Date(limit_day), $lte: today } }).exec((error, records) => {
     if (error) {
       console.log("Data recover: ERROR - ", error.message);
       setTimeout(itself, 86400000);
     } else {
       if (records.length > 0) {
         let promises = [];
-        if (records.filter(x => x.patient_id).length > 0) promises.push(_collectByPatients(records.filter(x => x.patient_id)));
-        if (records.filter(x => x.patient_id === null).length > 0) promises.push(_collectByBoards(records.filter(x => x.patient_id === null)));
+        if (records.filter(x => x.patient_id).length > 0) promises.push(_collectByPatients(records.filter(x => x.patient_id), today));
+        if (records.filter(x => x.patient_id === null).length > 0) promises.push(_collectByBoards(records.filter(x => x.patient_id === null), today));
         Promise.all(promises)
           .then(() => setTimeout(itself, 86400000))
           .catch(e => {
@@ -26,7 +27,7 @@ exports.execute = function itself() {
   });
 }
 
-_collectByPatients = (records) => {
+_collectByPatients = (records, today) => {
   return new Promise((resolve, reject) => {
     let to_store = [];
     Promise.all([
@@ -56,34 +57,35 @@ _collectByPatients = (records) => {
               locality: utils.decrypt(patient.Vitabox.locality),
               district: utils.decrypt(patient.Vitabox.district),
               tag: sensor.Sensormodel.tag,
-              warning: record.value > profile.max || record.value < profile.min
+              warning: record.value > profile.max || record.value < profile.min,
+              min: profile.min,
+              max: profile.max
             });
           });
         });
-        if (process.env.STORE_ANALYTIC_BUCKET) {
-          let today = new Date();
-          let fileName = today.getFullYear() + (months[today.getMonth()]) + ("0" + today.getDate()).slice(-2) + '_bio.csv';
-          let created = false;
-          utils.saveCSV(to_store, fileName).then(() => {
-            created = true;
-            return utils.readFile(fileName)
-          }).then(fileData => {
-            return storage.uploadFile(process.env.STORE_ANALYTIC_BUCKET, fileName, fileData)
-          }).then(() => {
-            return utils.removeFile(fileName)
-          }).then(() => {
-            console.log("Biometric data recover: DONE");
-            resolve();
-          }).catch(e => {
-            if (created) utils.removeFile(fileName).then(() => { });
-            reject(e);
-          });
-        }
+
+        let fileName = today.getFullYear() + (months[today.getMonth()]) + ("0" + today.getDate()).slice(-2) + '_bio.csv';
+        let created = false;
+        utils.saveCSV(to_store, fileName).then(() => {
+          created = true;
+          return utils.readFile(fileName)
+        }).then(fileData => {
+          return storage.uploadFile(process.env.STORE_ANALYTIC_BUCKET, fileName, fileData)
+        }).then(() => {
+          return utils.removeFile(fileName)
+        }).then(() => {
+          console.log("Biometric data recover: DONE");
+          resolve();
+        }).catch(e => {
+          if (created) utils.removeFile(fileName).then(() => { });
+          reject(e);
+        });
+
       }).catch(e => reject(e));
   })
 }
 
-_collectByBoards = (records) => {
+_collectByBoards = (records, today) => {
   return new Promise((resolve, reject) => {
     let to_store = [];
     db.Sensor.findAll({
@@ -107,30 +109,29 @@ _collectByBoards = (records) => {
               locality: utils.decrypt(sensor.Board.Vitabox.locality),
               district: utils.decrypt(sensor.Board.Vitabox.district),
               tag: sensor.Sensormodel.tag,
-              warning: record.value > sensor.Sensormodel.max_acceptable || record.value < sensor.Sensormodel.min_acceptable
+              warning: record.value > sensor.Sensormodel.max_acceptable || record.value < sensor.Sensormodel.min_acceptable,
+              min: sensor.Sensormodel.min_acceptable,
+              max: sensor.Sensormodel.max_acceptable
             });
           });
         });
 
-        if (process.env.STORE_ANALYTIC_BUCKET) {
-          let today = new Date();
-          let fileName = today.getFullYear() + (months[today.getMonth()]) + ("0" + today.getDate()).slice(-2) + '_env.csv';
-          let created = false;
-          utils.saveCSV(to_store, fileName).then(() => {
-            created = true;
-            return utils.readFile(fileName)
-          }).then(fileData => {
-            return storage.uploadFile(process.env.STORE_BUCKET, fileName, fileData)
-          }).then(() => {
-            return utils.removeFile(fileName)
-          }).then(() => {
-            console.log("Environmental data recover: DONE");
-            resolve();
-          }).catch(e => {
-            if (created) utils.removeFile(fileName).then(() => { });
-            reject(e);
-          });
-        }
+        let fileName = today.getFullYear() + (months[today.getMonth()]) + ("0" + today.getDate()).slice(-2) + '_env.csv';
+        let created = false;
+        utils.saveCSV(to_store, fileName).then(() => {
+          created = true;
+          return utils.readFile(fileName)
+        }).then(fileData => {
+          return storage.uploadFile(process.env.STORE_ANALYTIC_BUCKET, fileName, fileData)
+        }).then(() => {
+          return utils.removeFile(fileName)
+        }).then(() => {
+          console.log("Environmental data recover: DONE");
+          resolve();
+        }).catch(e => {
+          if (created) utils.removeFile(fileName).then(() => { });
+          reject(e);
+        });
       }).catch(e => reject(e));
   })
 }
