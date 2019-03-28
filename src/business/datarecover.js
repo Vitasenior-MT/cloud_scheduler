@@ -1,7 +1,6 @@
 var db = require('../models/index'),
   storage = require('../storage_connect'),
-  utils = require('./utils'),
-  months = ['01', '02', '03', '04', '05', '06', '07', '07', '08', '09', '10', '11', '12'];
+  utils = require('./utils');
 
 exports.execute = function itself() {
   let limit_day = new Date();
@@ -37,7 +36,7 @@ _collectByPatients = (records, today) => {
       }),
       db.Patient.findAll({
         where: { id: { $in: [...new Set(records.map(item => item.patient_id))] } },
-        include: [{ model: db.Vitabox, attributes: ['locality', 'district'] }, { model: db.Profile, attributes: ['tag', 'min', 'max'] }]
+        include: [{ model: db.Vitabox, attributes: ['locality', 'district'] }, { model: db.Profile, attributes: ['tag', 'min_nightly', 'max_nightly', 'min_diurnal', 'max_diurnal'] }]
       })
     ]).then(
       res => {
@@ -46,7 +45,11 @@ _collectByPatients = (records, today) => {
           matched.forEach(record => {
             let sensor = res[0].find(sensor => sensor.id === record.sensor_id);
             let profile = patient.Profiles.find(x => x.tag === sensor.Sensormodel.tag);
-
+            let min = profile.min_diurnal, max = profile.max_diurnal, hour = new Date(record.datetime).getHours();
+            if (hour < 9 || hour >= 18) {
+              min = profile.min_nightly;
+              max = profile.max_nightly;
+            }
             to_store.push({
               value: record.value,
               datetime: record.datetime.toISOString(),
@@ -57,14 +60,14 @@ _collectByPatients = (records, today) => {
               locality: utils.decrypt(patient.Vitabox.locality),
               district: utils.decrypt(patient.Vitabox.district),
               tag: sensor.Sensormodel.tag,
-              warning: record.value > profile.max || record.value < profile.min,
-              min: profile.min,
-              max: profile.max
+              warning: record.value > max || record.value < min,
+              min: min,
+              max: max
             });
           });
         });
 
-        let fileName = today.getFullYear() + (months[today.getMonth()]) + ("0" + today.getDate()).slice(-2) + '_bio.csv';
+        let fileName = today.toISOString() + '_bio.csv';
         let created = false;
         utils.saveCSV(to_store, fileName).then(() => {
           created = true;
@@ -116,7 +119,7 @@ _collectByBoards = (records, today) => {
           });
         });
 
-        let fileName = today.getFullYear() + (months[today.getMonth()]) + ("0" + today.getDate()).slice(-2) + '_env.csv';
+        let fileName = today.toISOString() + '_env.csv';
         let created = false;
         utils.saveCSV(to_store, fileName).then(() => {
           created = true;
