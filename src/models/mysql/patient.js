@@ -72,13 +72,20 @@ module.exports = (sequelize, DataTypes) => {
         cc: {
             type: DataTypes.STRING
         },
-        photo: { type: DataTypes.STRING }
+        photo: {
+            type: DataTypes.STRING
+        },
+        medication: {
+            type: DataTypes.JSON
+        },
+        info: {
+            type: DataTypes.STRING
+        }
     }, { underscored: true });
 
     Patient.associate = function (models) {
         models.Patient.hasMany(models.Profile);
         models.Patient.belongsTo(models.Vitabox);
-        models.Patient.hasMany(models.PatientBoard);
         models.Patient.belongsToMany(models.Board, { through: models.PatientBoard });
         models.Patient.belongsToMany(models.User, { through: models.DoctorPatient, as: 'Doctors' });
     };

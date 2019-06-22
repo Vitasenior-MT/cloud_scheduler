@@ -15,6 +15,7 @@
     "amqplib": "^0.5.2",
     "dotenv": "^6.0.0",
     "express": "^4.16.3",
+    "ibm-cos-sdk": "^1.4.3",
     "jsonwebtoken": "^8.3.0",
     "mongoose": "^5.1.4",
     "mysql2": "^1.5.3",

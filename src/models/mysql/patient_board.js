@@ -1,7 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   var PatientBoard = sequelize.define('PatientBoard', {
+    schedules: {
+      type: DataTypes.JSON
+    },
     frequency: {
-      type: DataTypes.INTEGER(2).UNSIGNED,
+      type: DataTypes.TINYINT(2).UNSIGNED,
       allowNull: true,
       defaultValue: null
     },
@@ -10,11 +13,6 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       defaultValue: null
     },
-    last_schedule: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: null
-    }
   }, { underscored: true });
 
   PatientBoard.associate = function (models) {

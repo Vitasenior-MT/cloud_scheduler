@@ -17,12 +17,16 @@ Promise.all([
 
     let express = require('express');
     var server = require('http').Server(express());
-
     var business = require('./src/business/index');
 
-    business.exams.execute();
+    // adjust to start at the beginning of the hour  (63 - new Date().getMinutes()) * 60000
+    setTimeout(business.exams.execute, (63 - new Date().getMinutes()) * 60000);
     business.cleaning.execute();
-    business.datarecover.execute();
+    console.log(process.env.STORE_ANALYTIC_BUCKET);
+    if (process.env.STORE_ANALYTIC_BUCKET) {
+      console.log("entrou");
+      business.datarecover.execute();
+    }
 
     let port = process.env.PORT || 8800;
     server.listen(port, () => {
