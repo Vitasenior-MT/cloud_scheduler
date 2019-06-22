@@ -1,9 +1,11 @@
-// main.js
+// server.js
 
 // BASE SETUP
 // =============================================================================
 // Get the env variables from .env
-require('dotenv').config();
+if (process.env.NODE_ENV === "development") {
+  require('dotenv').config();
+}
 
 Promise.all([
   require('./src/models/index').sequelize.sync(),
